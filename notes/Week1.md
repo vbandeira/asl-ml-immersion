@@ -9,7 +9,7 @@
 - ML models are functions with parameters and hyper-parameters;
 - We will be focusing in supervised machine learning;
 - Linear models have two types of parameters: Bias and weight;
-  - In a hyperplane, $y = b + X \times w$ where $b$ is the Bias term, $X$ the input and $w$ the weight;
+  - In a hyperplane, $y = b + X \times w$, where $b$ is the Bias term, $X$ the input and $w$ the weight;
   - In linear, we define the equation by $y = b + x \times m$. The difference is only the dimensions of the model;
 - Equation for a linear model tying mother's age and baby weight: $y=w_1x_1+b$, where $x_1$ is the feature (e.g. mother's age) and $w_1$ is the weight for $x_1$;
 
@@ -17,7 +17,7 @@
 
 - Compose a loss function by calculating errors of the prediction;
 - We use this function to measure the performance of each combination of the parameters;
-- One loss function is Root Mean Squared Error: $ \sqrt{\frac{1}{n} \times \displaystyle\sum_{i=1}^{n}{(y_i-y_i)^2}}$
+- One loss function is Root Mean Squared Error: $ \sqrt{\frac{1}{n} \times \displaystyle\sum_{i=1}^{n}{(\hat{y_i}-y_i)^2}}$
 - Logistic regression: Transform linear regression by a sigmoid activation function, represented by the $e^{-}$ part of the function;
   - $\hat{y} = \frac {1}{1+e^{-(w^Tx+b)}}$
 - Typically, use cross-entropy (related to Shannon's information theory) as the erro metric;
@@ -162,6 +162,142 @@
   - High-level APIs for distributed training (tf.estimator, tf.keras, tf.data);
 - Vertex AI has high integration with all those layers;
 
-## Tensor and variable
+### Tensor and variable
 
--
+- We can declare tensors using `tf.constant(data)`. The `tf.stack()` command allows to up a rank of a existing tensor;
+  ```python
+  x1 = tf.constant([2,3,4]) # (3,)
+  x2 = tf.stack([x1,x1]) # (3,2,)
+  ```
+- A tensor is a N-dimensional array data;
+- Tensors behave like numpy n-dimesional arrays, except that we have `tf.constant` and `tf.variable`;
+- It is possible to slice a tensor just like an array;
+- Tensor can be reshape using `tf.reshape(variable,shape)`;
+- A tensor may receive a new value using
+
+    ```python
+    x = tf.Variable(2.0, dtype=tf.float32, name='my_variable')
+    x.assign(48.2)    # 48.2
+    x.assign_add(4)   # 52.2
+    x.assign_sub(2)   # 50.2
+    ```
+
+### Autodiff and GradientTape
+
+- GradientTape records operations for automatic derivative;
+- GradientTape record the computation when it' executed (not when is defined!);
+
+  ```python
+  def compute_gradients(X, Y, w0, w1):
+    with tf.GradientTape() as tape:
+        loss = loss_mse(X, Y, w0, w1)
+    return tape.gradient(loss, [w0, w1])    # Specify the function (loss) as well as the parameters you want to take the gradients with respect to ([w0, w1])
+
+  w0 = tf.Variable(0.0)
+  w1 = tf.Variable(0.0)
+
+  dw0, dw1 = compute_gradients(X, Y, w0, w1)
+  ```
+
+- Autodiff eases the Gradient Descent implementation;
+
+  ```python
+  w0 = tf.Variable(0.0)
+  w1 = tf.Variable(0.0)
+
+  for step in range(0,STEPS + 1):
+    dw0, dw1 = compute_gradient(X, Y, w0, w1)
+    w0.assign_sub(dw0 * LEARNING_RATE)
+    w1.assign_sub(dw1 * LEARNING_RATE)
+  ```
+
+## Training on Large Datasets
+
+### The dataset API
+
+- A tf.data.Dataset allow you to create data pipelines from in-memory dictionary and lists of tensors; or out-of-memory sharded data files;
+- We can also preprocess data in parallel:
+
+  ```python
+    dataset = dataset.map(preproc_func).cache()
+  ```
+
+- Configure the way the data is fed into a model with a number of chaining methods
+
+  ```python
+    dataset = dataset.shuffle(1000)
+                        .repeat(epochs)
+                        .batch(batch_size)...
+  ```
+
+- We can think of `tf.data.Dataset` like generators, grabing batches of data at a time instead of downloading the whole data;
+- Datasets can be created for different file formats, like `TextLineDataset`, `TFRecordDataset`, `FixedLengthRecordDataset`. There is also a `GenericDataset` that we can use to implement our own parser;
+- For reading a csv file, we use `TextLineDataset`, then we define a parsing function to decode the data. TensorFlow provides the `tf.decode_csv` that makes it easier to do this;
+- For sharded CSV files, we could use this:
+
+  ```python
+    dataset = tf.data.Dataset.list_files(path)
+                    .flat_map(tf.data.TextLineDataset)
+                    .map(parse_row)
+  ```
+
+- `tf.data.experimental.make_csv_dataset` function does something similar to the previous code;
+- Separate the data for training, validation and testing before reading it;
+- Prefetch allows the code to parallelize the reading and the usage. While one thread is reading and processing the data, another one can use it to analyze and train. It works in CPU (reading data) and GPU (processing);
+- When `repeat` is empty, the default is `None`, which means $\infty$. So we need another mechanism to interrupt the training;
+
+## Activation functions
+
+- The compostion of linear functions always collapses to a linear function. In order to Neural Networks to work, we need to add a Non-Linear function (aka Activation Function) to avoid collapsing to a linear function;
+- We add the activation function between the hidden layers;
+- The end of every neural network is always a linear or a logistic regression;
+- A Neuron system is composed by the weighted sum, a Sigmoid function and hidden inputs;
+
+> "Any math function can be approximated through a neural net (Universal Approximation Theorem)";
+
+- Rectified Linear Unit (ReLU) is non-linear activation function widely used: $f(x)=\max(0,x)$;
+- There are many different ReLU variants. One of them is the Parametric ReLU applies an $\alpha$ to values lower than 0 to avoid derivative issues. Another one is the ReLU6, which caps the values over 6 to avoid exploding values;
+
+## Keras Sequential API
+
+- Keras is now built-in to TF 2.x;
+- Keras Sequential models bases on a sequences of layers;
+
+  ```python
+  model = Sequential([
+    Input(shape=(64,)),
+    Dense(units=32, activation="relu", name="hidden1")
+    Dense(units=16, activation="relu", name="hidden2")
+    Dense(units=8, activation="softmax", name="output")
+  ])
+  ```
+
+- We can use `tf.keras.layers.Flatten` to flatten a matrix into an array;
+- The last layer size is always equals to the number of classes desired with a activation function that helps the classification;
+- After defining the model, we need to compile it using `model.compile()`;
+- Adam is a optimizer very similar to Gradient Descent, with enhancements to solve some challenges of the original algorithm, like momentum that helps it to avoid being stuck in a local minima;
+- We can implement our own metrics functions to use in the compile. The limitation is that this metric function has to use TFs functions;
+- Once compiled, we call `model.fit` to start the training;
+- Instead of defining how many epochs, we define the total number of training examples. This prevents that the algorithm reads 2 times one sample while reads another one only 1 time;
+
+  ```python
+    steps_per_epoch = NUM_TRAIN_EXAMPLES // (TRAIN_BATCH_SIZE * NUM_EVALS)
+
+    history = model.fit(
+        x=trainds,
+        steps_per_epoch=steps_per_epoch,
+        epochs = NUM_EVALS,
+        validation_data=evalds,
+        callbacks=[TensorBoard(LOGDIR)]
+    )
+  ```
+
+- We use `sparse_categorical_crossentropy` when the values are integer. If we have one-hot encoding, we use `categorical_crossentropy`;
+- Once trained, the model can be used for prediction using `model.predict(input_samples, steps=1)`;
+- We can also save models using SavedModel, which is the universal serialization format for Tensorflow. This is an old version of the `model.save`, which is the recommended way of doing it;
+- [Pre-built containers for Vertex AI](https://cloud.google.com/vertex-ai/docs/predictions/pre-built-containers). These are used for serving predictions;
+- In Vertex AI, we can setup two predicion job models:
+  - For low-latency prediction, we use Endpoints;
+  - For large predictions, like processing data collected during the day, we use Batch Processing;
+- We can create a model in Vertex AI using `model.upload`. To create an endpoint in Vertex AI, we use `model.deploy` which will create an endpoint and deploy the model;
+- We can query the endpoint through REST, gRPC or using a Client Library calling something like `endpoint.predict`. The Client Libraries are based on gRPC;
