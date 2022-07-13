@@ -1,6 +1,6 @@
 # ASL Machine Learning - Week 1
 
-*Instrutor:* Kyle Steckler
+*Instructor:* Kyle Steckler
 
 ## Optimization
 
@@ -40,7 +40,7 @@
 
 - Small step sizes may never converge to the true minimum because it will to small changes over time. Large step sizes may never converge to the true minimum because the can overshoot it;
   - The ideal is to adapt the step size during the training. Start with larger step and reduce it over time;
-- Complex models may have local minimas. Some times is hard to get to the global minima;
+- Complex models may have local minimals. Some times is hard to get to the global minima;
 - The Loss Function slope provides de direction and step size in your search;
 - So we can rewrite the pseudocode as follows:
 
@@ -55,12 +55,12 @@
 - Model training is still to slow;
   1. Calculate derivative: Number of data points or Number of model parameters;
   1. Take a step: Number of model parameters;
-  1. Check Loss: Number of data points, number of model parameteres, or frequency of checks;
+  1. Check Loss: Number of data points, number of model parameters, or frequency of checks;
 - Calculating the derivative on fewer data points;
   - Creating subsets of data (batches) to train. This reduces the cost while preserving quality;
   - Data usually is chosen randomly, but is important that the algorithm sees all the samples;
   - The batch size should be representative as a whole;
-- Checking loss with reduced frequency is a straetgy to speed up the training process. For example: Update the loss every 100 steps or every hour;
+- Checking loss with reduced frequency is a strategy to speed up the training process. For example: Update the loss every 100 steps or every hour;
 
 ### BigQuery and Data split
 
@@ -81,7 +81,7 @@
 - Baselines are important; It helps to know what error metric is reasonable or good;
 - BQML is a way to easily build machine learning models using SQL;
 - Models are similar to tables in BigQuery;
-- To create a modelo in BigQuery, start by the query and add the model header:
+- To create a model in BigQuery, start by the query and add the model header:
 
   ```sql
   CREATE OR REPLACE MODEL
@@ -170,7 +170,7 @@
   x2 = tf.stack([x1,x1]) # (3,2,)
   ```
 - A tensor is a N-dimensional array data;
-- Tensors behave like numpy n-dimesional arrays, except that we have `tf.constant` and `tf.variable`;
+- Tensors behave like numpy n-dimensional arrays, except that we have `tf.constant` and `tf.variable`;
 - It is possible to slice a tensor just like an array;
 - Tensor can be reshape using `tf.reshape(variable,shape)`;
 - A tensor may receive a new value using
@@ -248,7 +248,7 @@
 
 ## Activation functions
 
-- The compostion of linear functions always collapses to a linear function. In order to Neural Networks to work, we need to add a Non-Linear function (aka Activation Function) to avoid collapsing to a linear function;
+- The composition of linear functions always collapses to a linear function. In order to Neural Networks to work, we need to add a Non-Linear function (aka Activation Function) to avoid collapsing to a linear function;
 - We add the activation function between the hidden layers;
 - The end of every neural network is always a linear or a logistic regression;
 - A Neuron system is composed by the weighted sum, a Sigmoid function and hidden inputs;
@@ -301,3 +301,53 @@
   - For large predictions, like processing data collected during the day, we use Batch Processing;
 - We can create a model in Vertex AI using `model.upload`. To create an endpoint in Vertex AI, we use `model.deploy` which will create an endpoint and deploy the model;
 - We can query the endpoint through REST, gRPC or using a Client Library calling something like `endpoint.predict`. The Client Libraries are based on gRPC;
+
+## Data preprocessing
+
+- We can build and export end-to-end models that accept raw data as input. Models handle feature normalization or feature value indexing on their own;
+- Keras has several preprocessing layers, like text, numerical, categorical and etc.;
+- Exact floats are not meaningful. Think of a house location. The coordinates may be so meaningful as the city or neighborhood name. In this case we use buckets, that is create a group of values into a name, converting a discrete value to a categorical one;
+
+  ```python
+  latbuckets = np.linspace(start=38.0, stop=42.0, num=NBUCKETS).tolist()
+  tf.keras.layers.Discretization(lonbuckets)(...)
+  ```
+
+  - The number of buckets is a hyper parameter that we should tune for each case;
+- The discretization layer may generate an one-hot encoded vector or a integer index;
+- Feature Crosses is essentially multiplying two features together. Ex.: Given the hour of a day (23 zeros and 1 one) and day of week (6 zeros and 1 one), we could combine them to create a new feature representing each combination of them (167 zeros and 1 one);
+- [Tensorflow Playground](https://playground.tensorflow.org);
+- HashedCrossing layers are the way to create a Feature Cross;
+- Embedding columns are used to create a simpler representation of a more complex data;
+- The model learns how to embed the feature cross in lower-dimensional space;
+  - Example: Think of a traffic at 8 and 9 AM. They should be similar;
+- Embedding represents data as lower-dimensional, dense vector;
+
+  ```python
+  embed = Embedding(input_dim=168, output_dim=2, name="pd_embed")(fc)
+  ```
+
+  - The goal of this is to create a numerical representation of something complex, like words. The result would be a one-hot encoded vector with the size of the set of possible values;
+- Embedding layers allows us to convert a categorical index into a embed dense vector. Example: $[43] \rightarrow [4.9, 3.8, 0.28]$;
+  - The goal is to go from high dimensionality to smaller dimensionalities;
+- A good starting point for number of embedding dimensions: $dimensions \approx \sqrt[4]{possible\ values}$
+
+## DNNs with the Keras Functional API
+
+- As humans we have the ability to generalization (animals with wings can fly) and memorization (but penguins can't fly);
+- Linear models are good for memorization, recommended for sparse and independent features. Ex.: words;
+- Neural networks are good for generalization, recommended for dense, highly correlated features. Ex.: words in a phrase;
+- Functional API allows to create wide and deep networks, with different inputs at different parallel layers;
+- The functional API allows us to define the input of each one of the layers instead of a sequence. We can call the `Dense` object as a function passing the layer object as its input;
+- Strengths:
+  - Less verbose tha keras.Model;
+  - Validates your model while you're defining it;
+  - your model is plottable and inspectable;
+  - Your model can be serialized or cloned;
+- Weakness:
+  - Doesn't support dynamic architectures;
+
+## Advanced Feature Engineering with Keras
+
+- We can create more meaningful features for the analysis. In our example we can calculate the euclidean distance between the pickup and drop off;
+- To create this features, we use Lambda Layers which takes a Python function;
