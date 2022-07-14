@@ -154,7 +154,7 @@ def rmse(y_true, y_pred):
     return tf.sqrt(tf.reduce_mean(tf.square(y_pred - y_true)))
 
 
-def build_dnn_model(nbuckets, nnsize, lr):  # pylint: disable=unused-argument
+def build_dnn_model(nbuckets, nnsize, lr):
     inputs = {
         colname: Input(name=colname, shape=(1,), dtype="float32")
         for colname in INPUT_COLS
@@ -172,13 +172,17 @@ def build_dnn_model(nbuckets, nnsize, lr):  # pylint: disable=unused-argument
     model = models.Model(inputs, output)
 
     # TODO 1a: Your code here
+    lr_optimizer = tf.keras.optimizers.Adam(learning_rate=lr)
+    model.compile(optimizer=lr_optimizer, loss="mse", metrics=[rmse, "mse"])
 
     return model
 
 
 def train_and_evaluate(hparams):
     # TODO 1b: Your code here
-
+    batch_size = hparams["batch_size"]
+    nbuckets = hparams["nbuckets"]
+    lr = hparams["lr"]
     nnsize = [int(s) for s in hparams["nnsize"].split()]
     eval_data_path = hparams["eval_data_path"]
     num_evals = hparams["num_evals"]
@@ -193,21 +197,13 @@ def train_and_evaluate(hparams):
     if tf.io.gfile.exists(output_dir):
         tf.io.gfile.rmtree(output_dir)
 
-    model = build_dnn_model(
-        nbuckets, nnsize, lr  # pylint: disable=undefined-variable
-    )
+    model = build_dnn_model(nbuckets, nnsize, lr)
     logging.info(model.summary())
 
-    trainds = create_train_dataset(
-        train_data_path, batch_size  # pylint: disable=undefined-variable
-    )
-    evalds = create_eval_dataset(
-        eval_data_path, batch_size  # pylint: disable=undefined-variable
-    )
+    trainds = create_train_dataset(train_data_path, batch_size)
+    evalds = create_eval_dataset(eval_data_path, batch_size)
 
-    steps_per_epoch = num_examples_to_train_on // (
-        batch_size * num_evals  # pylint: disable=undefined-variable
-    )
+    steps_per_epoch = num_examples_to_train_on // (batch_size * num_evals)
 
     checkpoint_cb = callbacks.ModelCheckpoint(
         checkpoint_path, save_weights_only=True, verbose=1

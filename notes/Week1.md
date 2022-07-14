@@ -351,3 +351,31 @@
 
 - We can create more meaningful features for the analysis. In our example we can calculate the euclidean distance between the pickup and drop off;
 - To create this features, we use Lambda Layers which takes a Python function;
+
+## Advanced Feature Engineering with BQML
+
+- BQML has several preprocessing function like we saw with Keras;
+- It has spatial and temporal functions out of the box, but we can also create our own;
+- More complex data transform can be added to a `TRANSFORM` block;
+- We must beware of overfitting as we increase the model complexity;
+- In Gradient Descent we aim to minimize loss(Data|Model) + complexity (Model). The more complex the model is, more likely we will overfit it;
+- One way to measure the model is by analyzing the weight vector. L1 regularization, complexity of model is defined by the L1 norm of the weight vector;
+  - $L(w,D)+\lambda {\lvert\lvert w \lvert\lvert}_1$
+- In L2 regularization **CHECK LATER**
+- FeatureCross creates a one-hot encoding, while Concatenate literally concatenates the values. The size of both should be the same, it just changes the way the data is represented;
+
+## Training on Vertex AI
+
+-
+
+## Hyperparameters tuning
+
+- Model improvements is very sensitive to batch_size and learning_rate;
+- The cost of usage of Vertex AI depends on the time of resource usage. So it is important to optimize this values;
+- [Google Vizier](https://static.googleusercontent.com/media/research.google.com/en//pubs/archive/46180.pdf) is a service for black-box optimization. We can use it to optimize our hyperparameters. It learns from a previous set of parameters to do another trial;
+- To use it we need to:
+  1. The parameters must be command-line arguments;
+  1. Set up `cloudml-hypertune` to record training metrics;
+  1. Create a `StudySpec` for the hyperparameter `config.yaml` file;
+  1. Create a `TrialJobSpec` for the hyperparameter `configu.yaml` file;
+- The optimization trials run in parallel. It is possible to create some kind of sequence, running N jobs in parallel, analyze its results and start a new job batch based in these values;
