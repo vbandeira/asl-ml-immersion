@@ -379,3 +379,36 @@
   1. Create a `StudySpec` for the hyperparameter `config.yaml` file;
   1. Create a `TrialJobSpec` for the hyperparameter `configu.yaml` file;
 - The optimization trials run in parallel. It is possible to create some kind of sequence, running N jobs in parallel, analyze its results and start a new job batch based in these values;
+
+## End-to-end ML with Structured Data
+
+- The most common ML models at Google are models that operate on structured data. About 60% of deployed models at Google work with structured data, about 30% are sequence/text and 5% is images (photos and videos). The rest are simpler models like trees;
+- The first step is to explore the dataset to select which features should we use, relationship between them (crossing), apply transformations (bucketize), etc.;
+- BigQuery is a serverless data warehouse;
+  - We shouldn't use BigQuery as any regular DBMS. It supports the features, but is a anti-pattern;
+  - BigQuery does caching based on the query;
+  - A slot is essentially a VM used by BQ;
+  - Each query costs about $5 per Terabyte, but the caching saves some money;
+- What makes a feature good?
+  - Be related to objective;
+  - Be known at prediction-time;
+  - Be numeric with meaningful magnitude;
+  - Be
+  - Be
+- Filter out bad data;
+- Vertex API provides managed datasets where you can select data templates and send your data for training;
+- We can add hyperparameter tunning in the `OPTIONS` section of BQML training:
+
+  ```
+  OPTIONS(
+      model_type='dnn_regressor',
+      num_trials=10,
+      max_parallel_trials=2,
+      hidden_units = hparam_candidates([struct([32,32]), struct([64,64,64]), struct([128,128,128])]),
+      dropout=hparam_candidates([0, 0.1, 0.2]),
+      learn_rate=hparam_range(0, 0.5)
+  )
+  ```
+
+  - We can use this for DNN Regressors and Classifiers, and also for Trees;
+  - The same considerations for hyperparameter tunning previously spoken applies to this scenario;
