@@ -119,3 +119,61 @@
 - The first layers are most task-general. The last ones are more task-specific;
 - Typically we cut the source network after the convolutional layers and retrain the Fully connected layers;
 - If you don't have enough data, it may be interesting to freeze the source model. For large labeled data, let the source model train;
+- TensorFlow Hub is a source of pre-trained models;
+- When working with non-structure data, always consider what already exists. You will not want to train language models from scratch, for example;
+  - If you don't have the language model for a specific language, sometimes is better to use translations of existing trained models than do all the training by yourself;
+
+### Sequences
+
+- Sequences are another common and important domain. Examples: Summarizing texts, audio processing, etc.;
+- Data sequence must have some correlation on the previous result. The current result is influenced by the previous one;
+- If you think of sliding windows over an image, then we can think of it as a sequence. A movie is a sequence;
+- Types of sequence models:
+  - One-to-sequence;
+  - Sequence-to-one;
+  - Sequence-to-sequence;
+
+### Time-series prediction
+
+- Time-series prediction problems are ubiquitous. Detection of fraudulent transactions is an example;
+- We will work with stock prices from 2002-2012;
+- We will analyze it using a sliding window to create features and labels. The data in the window will directly correlated to a result sequence;
+- Train/test set will be split temporally;
+
+### Feature Engineering for Time Series
+
+- Training a time-series model can require some feature engineering;
+- Handling variable length inputs and outputs is important;
+- if your input is shorter than expect, we can do:
+  - Use padding but we need to be aware that this will impact the result because the data is skewed. Is important to have different weights for the values and pad the less important one;
+  - Another approach is Bagging, which is where you sum the inputs and divide by a constant number. The result of the division will be the input. Bag of words model uses this technique;
+- Summary statistics are a great way of using bagging;
+- We can treat this as a regression or a classification task, recommending if the value will go up or down or stay;
+- BQML has a model called `ARIMA_PLUS` that uses moving averages, that is useful for this kind of scenario;
+- AutoML Forecast has more features to analyze time-series data;
+
+### Linear and DNN models for time series prediction
+
+- The network is the same as we know. The features will be timeseries-1, timeseries-2, and so on;
+
+### CNNs for time series predictions
+
+- Images and sequences share this sense of locality;
+- Steps to apply convolutions in time-series:
+  1. Flatten the input sequence;
+  1. Use `conv1d` to apply a number of filters to the sequence;
+  1. Use `max_pooling1d` to add some spatial invariance and downscaling
+  1. Flatten the resulting output into a sequence
+  1. Send it trough a fully connected layer with the appropriate output node;
+
+### Recurrent Neural Networks
+
+- RNNs handle variable-length sequences differently than CNNs and DNNs. The results with RNNs for time-series usually are better because they are built for sequences;
+- RNNs scan their input just like CNNs;
+- Two key ideas for RNNs:
+  1. RNNs learn a compact hidden state that represents the past;
+  1. The input to an RNN is a concatenation of the original, stateless input and the hidden state;
+- How RNNs creates powerful representations of the past:
+  1. Recurrent connection
+  1. Clever optimization (not gradient descent)
+-
