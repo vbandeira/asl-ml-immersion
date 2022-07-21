@@ -176,4 +176,35 @@
 - How RNNs creates powerful representations of the past:
   1. Recurrent connection
   1. Clever optimization (not gradient descent)
--
+- LSTM and Gated Recurrent Unit (GRU) are cells used to store the memory of previous reading. GRUs are usually preferred because they are more efficient;
+- GRU, LSTM, CNN and DNN are just feature extractors for a regression in the end;
+- One possible approach is to create different layers of RNNs. The cell from one layer works as the input of the next one;
+
+## Text Processing
+
+### Keras for Text Classification
+
+- Convert sequences into a numeric representation, creating embeddings for each word;
+  1. Split each sentence into tokens and create a mapping token->int;
+  1. Encode each sentence as sequence of these integers;
+  1. Pad each sequence to a constant length. Consider this when batching to avoid over padding the values of each batch;
+  1. Convert each integer into a meaningful numeric vector;
+- To create a map for each word to an integer, we use `tf.keras.preprocessing.text.Tokenizer` and `tokenizer.fit_on_texts(titles)`;
+- Then we encode each sentence as a sequence of integers using `x = tokenizer.texts_to_sequence(texts)`;
+- Next we do the padding using `tf.keras.preprocessing.sequence.pad_sequences`;
+- Finally we convert each integer into a embedded representation using a `Embedding` layer, where the `input_dim` is the vocabulary size;
+- We can use DNNs, CNNs and RNNs for text classification, we just need to work on the preprocessing. The rest is exactly the same that we did for time-series;
+- Using pre-trained embeddings is really helpful, but sometimes you need to retrain some weights depending on the scenario;
+- Always consider the processing time for each step because it is an signal of how fast the prediction will be;
+
+## Links e livros úteis
+
+- https://www.researchgate.net/publication/329400806_Forecasting_hotel_reservations_with_long_short-term_memory-based_recurrent_neural_networks
+- http://ceur-ws.org/Vol-2431/paper3.pdf
+- https://towardsdatascience.com/animated-rnn-lstm-and-gru-ef124d06cf45
+- https://d2l.ai/chapter_recurrent-modern/lstm.html
+- Deep Learning Book -- Goodfellow and Yoshua Bengio
+- Elements of Statistical Learning;
+- Mining of Massive Datasets;
+- https://keras.io/api/callbacks/early_stopping/
+- https://www.tensorflow.org/api_docs/python/tf/keras/layers/TextVectorization
