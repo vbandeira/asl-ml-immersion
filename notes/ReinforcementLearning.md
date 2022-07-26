@@ -82,15 +82,15 @@ $\large G_t = R_{t+1} + \gamma R_{t+2} + \gamma^2 R_{t+3}+...$
 
 ## Contextual bandits
 
-- Multi-Armed Bandits is a RL without the state. You choose which action to take next and you get a distribution of each action, determined by $R \sim P(r|a)$;
+- Multi-Armed Bandits is a RL without the state. You choose which action to take next and you get a distribution of each action, determined by $\large R \sim P(r|a)$;
   - The goal is to find the action with the largest expectation;
   - Teh return is equal of the reward;
   - The Q-value is the reward expectation given the action;
 - Always choose the action with maximal expected reward;
 - For that we use the Epsilon-Greedy Policy
   - For that we keep track of the mean rewards per action;
-- Regret as a metric: 
-  - $\large L_t=\frac{1}{n}\displaystyle\sum^n+t=1(Q^*-r_t)$;
+- Regret as a metric:
+  - $\LARGE L_t=\frac{1}{n}\displaystyle\sum^n_{t=1}(Q^*-r_t)$;
 - An example of a multi-armed bandits agent is an A/B testing that rewards the user that doesn't know which action will return the highest reward;
 - Contextual bandits condition the rewards to the state or context that the agent is operating. The agent has more data points to take its decision;
 - Recommender systems takes the context (User features like age, search history) and the action (product features like product and price). Send them through hidden layers, concatenate them, sendo to dense layers and then calculate the Q-Value, which is the probability of click, defined by $Q_{\theta}(x,a)$;
@@ -102,3 +102,7 @@ $\large G_t = R_{t+1} + \gamma R_{t+2} + \gamma^2 R_{t+3}+...$
 ## Notes
 
 - [CartPole with Actor-Critic example](https://www.tensorflow.org/tutorials/reinforcement_learning/actor_critic);
+- [Reinforcement Learning: An Introduction](https://web.stanford.edu/class/psych209/Readings/SuttonBartoIPRLBook2ndEd.pdf);
+- [Stanford course on RL](https://www.youtube.com/watch?v=FgzM3zpZ55o);
+- https://www.youtube.com/playlist?list=PLMrJAkhIeNNQe1JXNvaFvURxGY4gE9k74
+- https://www.youtube.com/playlist?list=PLwRJQ4m4UJjNymuBM9RdmB3Z9N5-0IlY0
