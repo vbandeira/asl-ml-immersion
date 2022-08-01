@@ -118,8 +118,103 @@
 
 - Collaborative filtering seems powerful, but it has its drawbacks. Like fresh items/users;
 - The cold-start problem affects collaborative filtering methods. We can define some thresholds to define which approach to use (content or collaborative);
-- YouTube uses two neural networks to recommend videos, it is called Hydra. It uses a candidate generation (NN looking at all items and user data) that receives millions of videos and outputs hundreds. Then a ranking algorithm (NN looking for user data, other candidate sources and video features) that receives the output of candidate generation and outputs dozens of videos;
 - AutoML has kind of a [recommender system](https://cloud.google.com/retail/docs/create-models). Essentially you upload all your user and item data. You select the metrics used, type of signal (implicit or explicit) and etc. You have to do more than basic AutoML trainings. It is not super popular because it has an overhead;
+- YouTube uses two neural networks to recommend videos, it is called Hydra. It uses a candidate generation (NN looking at all items and user data) that receives millions of videos and outputs hundreds. Then a ranking algorithm (NN looking for user data, other candidate sources and video features) that receives the output of candidate generation and outputs dozens of videos;
+  - The candidate generation takes an item embedding from, e.g. WALS, then find the last 10 videos watched by the user and embed it. This is the watch vector;
+  - After the previous step, it repeats the steps relative to past search queries, add knowledge about user (e.g., location, gender), add example age to avoid overemphasizing older videos;
+  - The final section take the previous vectors, train a DNN classifier, treat the last-but-one layer as user embedding, and use the output of DNN classifier and user embedding to generate candidates;
+  - The softmax layer returns a probability of the use watch each video;
+- The ranking networks uses more tailored features;
+  - Takes the videos suggested to user, videos watched by user. Both individual and average embeddings;
+  - Also takes hundreds of features, including language embeddings and user behavior;
+  - All previous inputs are sent to a DNN classifier whose output is used for ranking, using a logistic regression. We can think of it as a softmax returning the probabilities of the user to watch the video;
+- For Youtube, watch time is a measure of engagement. Context is also very important;
+
+### TensorFlow Recommenders
+
+- Recommenders systems are hard to train, evaluate and deploy. The are large, use unstructured data, sparse, have multiple objectives, etc.;
+- These models tends to decay fast, because the space tends to expand;
+
+## Graphs
+
+### Introduction to Graph Neural Networks
+
+- In supervised learning, each feature is independent;
+- In graphs the features have some sort of dependency;
+- Each node in the graph is a feature with its neighbors;
+- We can have the following model types:
+  - Supervised - Classification from neighborhood features;
+  - Semi-Supervised - Propagate labels from neighborhood;
+  - Unsupervised - Train node-level embeddings;
+
+### Graphs as Data Structures
+
+- Graphs are everywhere. Training independent doesn't represent all scenarios. That's what Graphs try to solve;
+- A graph is a set of vertices (nodes) and edges;
+- Each node can have a feature vector;
+- The adjacency matix contains the neighborhood for each node;
+- Edge feature says if we can apply it between two nodes;
+- We can think the pixel of images as graphs, so we can apply CNNs to it;
+- Considerations with graph convolutions:
+  - What do we want for graph convolutional layer?
+    - Computational and storage efficiency: O(V+E);
+    - Fixed number of parameters;
+    - Localization; action on local neighborhood of a node;
+- We can aggregate nodes my multiplying the adjacency matrix with the features and we have the weighted sum of the nodes;
+
+### Message Passing Neural Networks
+
+- Nodes send arbitrary vectors along graph edges called messages;
+- Essentially the nodes will process its message and aggregate them;
+
+### Graph Attention Network (GAT)
+
+- Indicated for small graphs;
+- It adds an learning coefficient ($\alpha$);
+
+### TensorFlow Graphs Neural Networks
+
+- Provides the building blocks for implementing GNNs;
+- `graph_neural_networks/solutions/graph_classification.ipynb` at the branch `neural_structured_learning`;
+
+## Other stuff
+
+- We can use the `ML.EXPLAIN_FORECAST` of BQML to get a detailed data about forecasts. The code below plots the data, drawing a "funnel" on predicted values;
+
+  ```python
+  import matplotlib.pyplot as plt
+  import pandas as pd
+  def plot_forecast(df, start_timestamp='2012-01-01'):
+      df = df[df['time_series_timestamp'] > start_timestamp]
+
+      df_historic = df[df['time_series_type']=='history']
+      df_pred = df[df['time_series_type']=='forecast']
+
+      plt.figure(figsize=(20,6))
+      plt.plot(df_historic['time_series_timestamp'], df_historic['time_series_data'], label = 'Historical')
+      plt.xlabel('timestamp')
+      plt.ylabel('Close')
+
+      plt.plot(
+          df_pred['time_series_timestamp'],
+          df_pred['time_series_data'],
+          alpha = 1, label = 'Forecast',
+          linestyle='--'
+      )
+
+      plt.fill_between(
+          df_pred['time_series_timestamp'],
+          df_pred['prediction_interval_lower_bound'],
+          df_pred['prediction_interval_upper_bound'],
+          color = '#539caf', alpha = 0.4,
+          label = str(df_pred['confidence_level'].iloc[0] * 100) + '% confidence interval'
+      )
+
+      plt.legend(loc = 'upper center', prop={'size': 16})
+      plt.show()
+  ```
+
+- It is possible to integrate BigQuery with DataStudio;
 
 ## Notes
 
@@ -128,3 +223,6 @@
 - [Google Explainable AI](https://cloud.google.com/vertex-ai/docs/explainable-ai/configuring-explanations)
 - [Introducing BigQuery Flex Slots](https://cloud.google.com/blog/products/data-analytics/introducing-bigquery-flex-slots)
 - [AutoML Recommender System - Feature](https://cloud.google.com/recommendations)
+- https://www.tensorflow.org/recommenders/examples/sequential_retrieval
+- https://www.tensorflow.org/recommenders/examples/deep_recommenders
+- https://github.com/GoogleCloudPlatform/vertex-ai-samples/blob/main/notebooks/official/automl/sdk_automl_tabular_forecasting_batch.ipynb
